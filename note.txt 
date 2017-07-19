@@ -182,3 +182,165 @@ update plays_controller.rb
                       <%= link_to "Back", root_path %>
                       <%= link_to "Edit", edit_play_path(@play) %>
                       <%= link_to "Delete", play_path(@play), method: :delete, data: { confirm: "Are you sure? "} %>
+
+application.html.erb    ADD NAV BAR
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Movie</title>
+    <%= csrf_meta_tags %>
+
+    <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+    <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
+  </head>
+
+  <body>
+    <nav class="nav navbar-default">
+      <div class="container">
+        <div class="navbar-header">
+          <%= link_to "Broadway", root_path, class: "navbar-brand" %>
+      </div>
+
+      <ul class="nav navbar-nav navbar-right">
+				<% if user_signed_in? %>
+					<li><%= link_to "Sign Out", destroy_user_session_path, method: :delete %></li>
+				<% else %>
+					<li><%= link_to "Sign Up", new_user_registration_path %></li>
+					<li><%= link_to "Log In", new_user_session_path %></li>
+				<% end %>
+			</ul>
+
+      <ul class="nav navbar-nav">
+
+				<% if user_signed_in? %>
+					<li><%= link_to "Add Play", new_play_path %></li>
+				<% end %>
+			</ul>
+
+    </div>
+    </nav>
+
+    <p class="notice"><%= notice %></p>
+    <p class="alert"><%= alert %></p>
+
+  <div class ="container">
+    <%= yield %>
+  </div>
+  </body>
+</html>
+
+///////////////////////////////////////////////////////////
+CREATE A USER ID THAT ASSOCIATE TO USER TO PLAYS
+
+rails c
+Play.connection
+Play
+
+rails g migration add_user_id_to_plays user_id:integer
+
+ONCE USER ID IS CREATED , THEN WE MUST CHANGE THE PLAY CONTROLLER THAT ASSOCIATE TO A PARTICULAR USER ID...
+MODIFY plays_controller.rb
+
+                            class PlaysController < ApplicationController
+                              before_action :find_play, only: [:show, :edit, :update, :destroy]
+
+                              def index
+                                @plays = Play.all.order("created_at DESC")
+                              end
+
+                              def show
+
+                              end
+
+                              def new
+                                @play = current_user.play.build    <=CHANGE HERE
+                              end
+
+                              def create
+              AND HERE=>        @play = current_user.play.build(play_params) #params.require(:play).permit(:title, :description, :director), dont want to repeat code thats why is define below private
+                                  if @play.save
+                                    redirect_to root_path
+                                  else
+                                    render 'new'
+                                  end
+                              end
+
+                              def edit
+
+                              end
+
+                              def update
+                                if @play.update(play_params)
+                                  redirect_to play_path(@play)
+                                else
+                                  render 'edit'
+                                end
+                              end
+
+                              def destroy
+                                @play.destroy
+                                redirect_to root_path
+                              end
+
+                              private
+
+                              def play_params
+                                params.require(:play).permit(:title, :description, :director)
+                              end
+
+                              def find_play
+                                @play = Play.find(params[:id])
+                              end
+                            end
+COMPLETE THE ASSOCIATION
+
+    user.rb
+                            class User < ApplicationRecord
+                              has_many :plays   <=NOTE
+
+                              devise :database_authenticatable, :registerable,
+                                     :recoverable, :rememberable, :trackable, :validatable
+                            end
+
+    play.rb
+                                class Play < ApplicationRecord
+                                  belongs_to :user   <=NOTE
+                                end
+
+
+
+    MODIFY SHOW.HTML.ERB
+
+                        <h2><%= @play.title %></h2>
+                        <h3><%= @play.director %></h3>
+                        <p><%= @play.description %></p>
+
+                          <div class="links btn-group">
+                            <% if user_signed_in? %>
+                                <% if @play.user_id == current_user.id %>
+                                  <%= link_to "Edit", edit_play_path(@play) %>
+                                  <%= link_to "Delete", play_path(@play), method: :delete, data: { confirm: "Are you sure? "} %>
+                                <%end%>
+                              <%end%>
+                          </div>
+/////////////////////////////////////////////////////////////////////////
+
+CREATE CATEGORY
+
+rails g model Category name:string
+
+and create a category id to plays
+
+rails g migration add_category_id_to_plays category_id:integer  
+
+CREATE ASSOCIATION - MODIFY play.rb
+
+              class Play < ApplicationRecord
+                belongs_to :user
+                belongs_to :category
+              end
+category.rb
+              class Category < ApplicationRecord
+                has_many :plays
+              end

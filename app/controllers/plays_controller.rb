@@ -10,11 +10,11 @@ class PlaysController < ApplicationController
   end
 
   def new
-    @play = Play.new
+    @play = current_user.play.build
   end
 
   def create
-    @play = Play.new(play_params) #params.require(:play).permit(:title, :description, :director), dont want to repeat code thats why is define below private
+    @play = current_user.play.build(play_params) #params.require(:play).permit(:title, :description, :director), dont want to repeat code thats why is define below private
       if @play.save
         redirect_to root_path
       else
