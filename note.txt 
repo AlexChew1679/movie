@@ -1,0 +1,121 @@
+rails g model Play title:string description:text director:string
+rails g controller Plays
+
+resources :plays
+root 'plays#index'
+
+at PlaysController
+
+                def index
+                end
+
+
+  gem 'simple_form'
+  gem 'bootstrap-sass'
+
+  rails g simple_form:install --bootstrap
+
+  application.css.scss  :
+  @import "bootstrap-sprockets";
+  @import "bootstrap";
+
+  application.js
+  //= require bootstrap-sprockets
+
+  plays_controller
+
+                        class PlaysController < ApplicationController
+
+                          def index
+                          end
+
+                          def new
+                            @play = Play.new
+                          end
+
+                          def create
+                            @play = Play.new(play_params) #params.require(:play).permit(:title, :description, :director), dont want to repeat code thats why is define below private
+                          end
+
+                          def edit
+                          end
+
+                          def update
+                          end
+
+                          private
+
+                          def play_params
+                            params.require(:play).permit(:title, :description, :director)
+                          end
+                        end
+
+create new.html.erb
+create _form.html.erb
+
+                              <%= simple_form_for @play do |f| %>
+                                <%= f.input :title, label: "Movie Title" %>
+                                <%= f.input :description %>
+                                <%= f.input :director %>
+                                <%= f.button :submit %>
+                              <% end %>
+
+create index.html.erb
+
+                              <% @plays.each do |play| %>
+                              <h2><%= link_to play.title, play_path(play) %> </h2>
+                              <%end%>
+
+                              <%= link_to "Add Play", new_play_path %>
+
+modify plays_controller.rb
+
+                                class PlaysController < ApplicationController
+                                  before_action :find_play, only: [:show, :edit, :update, :destroy]
+
+                                  def index
+                                    @plays = Play.all.order("created_at DESC")
+                                  end
+
+                                  def show
+
+                                  end
+
+                                  def new
+                                    @play = Play.new
+                                  end
+
+                                  def create
+                                    @play = Play.new(play_params) #params.require(:play).permit(:title, :description, :director), dont want to repeat code thats why is define below private
+                                      if @play.save
+                                        redirect_to root_path
+                                      else
+                                        render 'new'
+                                      end
+                                  end
+
+                                  def edit
+                                  end
+
+                                  def update
+                                  end
+
+                                  private
+
+                                  def play_params
+                                    params.require(:play).permit(:title, :description, :director)
+                                  end
+
+                                  def find_play
+                                    @play = Play.find(params[:id])
+                                  end
+                                end
+
+create show.html.erb
+                            <h2><%= @play.title %></h2>
+                            <h3><%= @play.director %></h3>
+                            <p><%= @play.description %></p>
+
+                            <%= link_to "New Play", new_play_path %>
+
+                            
